@@ -1,7 +1,7 @@
 package com.stardevllc.starhomes.events;
 
 import com.stardevllc.starhomes.Home;
-import org.bukkit.entity.Player;
+import com.stardevllc.starmclib.actors.Actor;
 import org.bukkit.event.*;
 
 public class DeleteHomeEvent extends Event implements Cancellable {
@@ -11,9 +11,9 @@ public class DeleteHomeEvent extends Event implements Cancellable {
     private boolean cancelled;
     
     private Home home;
-    private Player actor;
+    private Actor actor;
     
-    public DeleteHomeEvent(Home home, Player actor) {
+    public DeleteHomeEvent(Home home, Actor actor) {
         this.home = home;
         this.actor = actor;
     }
@@ -22,7 +22,7 @@ public class DeleteHomeEvent extends Event implements Cancellable {
         return home;
     }
     
-    public Player getActor() {
+    public Actor getActor() {
         return actor;
     }
     

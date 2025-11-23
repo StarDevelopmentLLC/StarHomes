@@ -1,7 +1,7 @@
 package com.stardevllc.starhomes.events;
 
 import com.stardevllc.starhomes.Home;
-import org.bukkit.entity.Player;
+import com.stardevllc.starmclib.actors.Actor;
 import org.bukkit.event.*;
 
 public class RenameHomeEvent extends Event implements Cancellable {
@@ -11,12 +11,12 @@ public class RenameHomeEvent extends Event implements Cancellable {
     private boolean cancelled;
     
     private Home home;
-    private String oldName;
-    private Player actor;
+    private String newName;
+    private Actor actor;
     
-    public RenameHomeEvent(Home home, String oldName, Player actor) {
+    public RenameHomeEvent(Home home, String newName, Actor actor) {
         this.home = home;
-        this.oldName = oldName;
+        this.newName = newName;
         this.actor = actor;
     }
     
@@ -24,11 +24,11 @@ public class RenameHomeEvent extends Event implements Cancellable {
         return home;
     }
     
-    public String getOldName() {
-        return oldName;
+    public String getNewName() {
+        return newName;
     }
     
-    public Player getActor() {
+    public Actor getActor() {
         return actor;
     }
     

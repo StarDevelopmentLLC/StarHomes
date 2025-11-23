@@ -2,11 +2,11 @@ package com.stardevllc.starhomes.commands;
 
 import com.stardevllc.starhomes.Home;
 import com.stardevllc.starhomes.StarHomes;
+import com.stardevllc.starhomes.StarHomes.RenameHomeInfo;
+import com.stardevllc.starhomes.StarHomes.RenameHomeStatus;
 import com.stardevllc.starhomes.events.RenameHomeEvent;
-import com.stardevllc.starlib.helper.Pair;
-import com.stardevllc.starmclib.command.StarCommand;
+import com.stardevllc.starmclib.actors.Actors;
 import com.stardevllc.starmclib.command.flags.FlagResult;
-import com.stardevllc.starmclib.mojang.MojangAPI;
 import com.stardevllc.starmclib.mojang.MojangProfile;
 import com.stardevllc.starmclib.plugin.ExtendedJavaPlugin;
 import org.bukkit.Bukkit;
@@ -15,7 +15,7 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 
-public class RenameHomeCommand extends StarCommand<ExtendedJavaPlugin> {
+public class RenameHomeCommand extends BaseCommand {
     public RenameHomeCommand(ExtendedJavaPlugin plugin) {
         super(plugin, "renamehome", "Renames a home for yourself or another player", "starhomes.command.renamehome");
         this.playerOnly = true;
@@ -33,72 +33,62 @@ public class RenameHomeCommand extends StarCommand<ExtendedJavaPlugin> {
         
         Player player = (Player) sender;
         if (args[0].contains(":")) {
-            if (!player.hasPermission("starhomes.command.renamehome.others")) {
-                plugin.getColors().coloredLegacy(player, "&cYou do not have permission to rename homes of other players.");
+            OtherInfo otherInfo = getOtherPlayerHome(player, args[0], "starhomes.command.renamehome.others", "&cYou do not have permission to rename homes of other players.");
+            if (otherInfo == null) {
                 return true;
             }
             
-            String[] split = args[0].split(":");
-            if (split.length != 0) {
-                plugin.getColors().coloredLegacy(sender, "&cInvalid format for renaming another player's home.");
-                return true;
-            }
-            String playerName = split[2];
-            MojangProfile profile = MojangAPI.getProfile(playerName);
-            if (profile == null) {
-                plugin.getColors().coloredLegacy(player, "&cInvalid player name");
-                return true;
-            }
-            
+            MojangProfile profile = otherInfo.profile();
             UUID uuid = profile.getUniqueId();
-            String homeName = split[1];
-            Optional<Pair<Home, String>> homeOpt = StarHomes.renameHome(uuid, homeName, newName);
             
+            RenameHomeInfo renameHomeInfo = StarHomes.renameHome(uuid, otherInfo.homeName(), args[1], Actors.of(player));
+            
+            if (renameHomeInfo.status() == RenameHomeStatus.NO_HOME) {
+                plugin.getColors().coloredLegacy(player, "&cNo home by the name " + renameHomeInfo.oldName() + " exists for " + profile.getName() + ".");
+                return true;
+            }
+            
+            if (renameHomeInfo.status() == RenameHomeStatus.EVENT_CANCELLED) {
+                plugin.getColors().coloredLegacy(player, "&cRenaming the home " + renameHomeInfo.oldName() + " was cancelled.");
+                return true;
+            }
+            
+            Optional<Home> homeOpt = renameHomeInfo.home();
             if (homeOpt.isEmpty()) {
-                plugin.getColors().coloredLegacy(player, "&cNo home by the name " + homeName + " exists for " + playerName + ".");
+                plugin.getLogger().severe("Rename Home returned success, but the home value was not present. Please report as a bug");
                 return true;
             }
             
-            Pair<Home, String> renameInfo = homeOpt.get();
-            Home home = renameInfo.first();
+            Home home = homeOpt.get();
             
-            RenameHomeEvent event = new RenameHomeEvent(home, renameInfo.second(), player);
-            Bukkit.getPluginManager().callEvent(event);
-            
-            if (event.isCancelled()) {
-                StarHomes.renameHome(uuid, home.getName(), renameInfo.second());
-                plugin.getColors().coloredLegacy(player, "&cRenaming the home " + home.getName() + " was cancelled.");
-                return true;
-            }
-            
-            plugin.getColors().coloredLegacy(player, "&eYou renamed the home &b" + renameInfo.second() + " &eto &b" + home.getName() + " &efor &b" + profile.getName() + "&e.");
+            plugin.getColors().coloredLegacy(player, "&eYou renamed the home &b" + renameHomeInfo.oldName() + " &eto &b" + home.getName() + " &efor &b" + profile.getName() + "&e.");
             Player p = Bukkit.getPlayer(uuid);
             if (p != null) {
-                plugin.getColors().coloredLegacy(p, "&b" + player.getName() + " &erenamed the home &b" + renameInfo.second() + " &eto &b" + home.getName() + "&e.");
+                plugin.getColors().coloredLegacy(p, "&b" + player.getName() + " &erenamed the home &b" + renameHomeInfo.oldName()+ " &eto &b" + home.getName() + "&e.");
             }
             return true;
         }
-        String homeName = args[0];
-        Optional<Pair<Home, String>> homeOpt = StarHomes.renameHome(player.getUniqueId(), homeName, newName);
+        RenameHomeInfo renameHomeInfo = StarHomes.renameHome(player.getUniqueId(), args[0], args[1], Actors.of(player));
         
+        if (renameHomeInfo.status() == RenameHomeStatus.NO_HOME) {
+            plugin.getColors().coloredLegacy(player, "&cYou do not have a home named " + renameHomeInfo.oldName() + ".");
+            return true;
+        }
+        
+        if (renameHomeInfo.status() == RenameHomeStatus.EVENT_CANCELLED) {
+            plugin.getColors().coloredLegacy(player, "&cRenaming the home " + renameHomeInfo.oldName() + " was cancelled.");
+            return true;
+        }
+        
+        Optional<Home> homeOpt = renameHomeInfo.home();
         if (homeOpt.isEmpty()) {
-            plugin.getColors().coloredLegacy(player, "&cYou don't have a home named " + homeName + ".");
+            plugin.getLogger().severe("Rename Home returned success, but the home value was not present. Please report as a bug");
             return true;
         }
         
-        Pair<Home, String> renameInfo = homeOpt.get();
-        Home home = renameInfo.first();
+        Home home = homeOpt.get();
         
-        RenameHomeEvent event = new RenameHomeEvent(home, renameInfo.second(), player);
-        Bukkit.getPluginManager().callEvent(event);
-        
-        if (event.isCancelled()) {
-            StarHomes.renameHome(player.getUniqueId(), home.getName(), renameInfo.second());
-            plugin.getColors().coloredLegacy(player, "&cRenaming the home " + home.getName() + " was cancelled.");
-            return true;
-        }
-        
-        plugin.getColors().coloredLegacy(player, "&eYou renamed the home &b" + renameInfo.second() + " &eto &b" + home.getName() + "&e.");
+        plugin.getColors().coloredLegacy(player, "&eYou renamed the home &b" + renameHomeInfo.oldName() + " &eto &b" + home.getName() + "&e.");
         return true;
     }
     

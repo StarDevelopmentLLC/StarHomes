@@ -3,9 +3,7 @@ package com.stardevllc.starhomes.commands;
 import com.stardevllc.starhomes.Home;
 import com.stardevllc.starhomes.StarHomes;
 import com.stardevllc.starlib.observable.collections.list.ObservableList;
-import com.stardevllc.starmclib.command.StarCommand;
 import com.stardevllc.starmclib.command.flags.FlagResult;
-import com.stardevllc.starmclib.mojang.MojangAPI;
 import com.stardevllc.starmclib.mojang.MojangProfile;
 import com.stardevllc.starmclib.plugin.ExtendedJavaPlugin;
 import org.bukkit.Bukkit;
@@ -14,7 +12,7 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 
-public class HomeCommand extends StarCommand<ExtendedJavaPlugin> {
+public class HomeCommand extends BaseCommand {
     public HomeCommand(ExtendedJavaPlugin plugin) {
         super(plugin, "home", "Teleports a home that you have or another player has", "starhomes.command.home");
         this.playerOnly = true;
@@ -36,29 +34,18 @@ public class HomeCommand extends StarCommand<ExtendedJavaPlugin> {
         }
         
         if (args[0].contains(":")) {
-            if (!player.hasPermission("starhomes.command.home.others")) {
-                plugin.getColors().coloredLegacy(player, "&cYou do not have permission to teleport to other players homes.");
+            OtherInfo otherInfo = getOtherPlayerHome(player, args[0], "starhomes.command.home.others", "&cYou do not have permission to teleport to other players homes.");
+            if (otherInfo == null) {
                 return true;
             }
             
-            String[] split = args[0].split(":");
-            if (split.length != 2) {
-                plugin.getColors().coloredLegacy(sender, "&cInvalid format for teleport to another player's home.");
-                return true;
-            }
-            String playerName = split[0];
-            MojangProfile profile = MojangAPI.getProfile(playerName);
-            if (profile == null) {
-                plugin.getColors().coloredLegacy(player, "&cInvalid player name");
-                return true;
-            }
+            MojangProfile profile = otherInfo.profile();
             
             UUID uuid = profile.getUniqueId();
-            String homeName = split[1];
-            Optional<Home> homeOpt = StarHomes.getHome(uuid, homeName);
+            Optional<Home> homeOpt = StarHomes.getHome(uuid, otherInfo.homeName());
             
             if (homeOpt.isEmpty()) {
-                plugin.getColors().coloredLegacy(player, "&cNo home by the name " + homeName + " exists for player " + playerName + ".");
+                plugin.getColors().coloredLegacy(player, "&cNo home by the name " + otherInfo.homeName() + " exists for player " + profile.getName() + ".");
                 return true;
             }
             

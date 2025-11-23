@@ -3,12 +3,13 @@ package com.stardevllc.starhomes;
 import com.stardevllc.config.Section;
 import com.stardevllc.config.file.FileConfig;
 import com.stardevllc.config.file.yaml.YamlConfig;
-import com.stardevllc.starlib.helper.Pair;
+import com.stardevllc.starhomes.events.*;
 import com.stardevllc.starlib.observable.collections.list.ObservableArrayList;
 import com.stardevllc.starlib.observable.collections.list.ObservableList;
 import com.stardevllc.starlib.observable.collections.map.ObservableHashMap;
 import com.stardevllc.starlib.observable.collections.map.ObservableMap;
 import com.stardevllc.starmclib.Position;
+import com.stardevllc.starmclib.actors.Actor;
 import com.stardevllc.starmclib.plugin.ExtendedJavaPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -41,8 +42,9 @@ public final class StarHomes {
         StarHomes.plugin = plugin;
         
         plugin.getMainConfig().addDefault("homes.storage", "SINGLEFILE", "This controls how homes are stored.", "SINGLEFILE means that all homes are stored in a single file", "SEPARATEFILES means that homes are stored in a file per player using {playeruuid}.yml");
-        plugin.getMainConfig().addDefault("homes.singlefile.name", "homes.yml", "This is just the name of the file when using SINGLEFILE storage mode");
-        plugin.getMainConfig().addDefault("homes.separatefiles.foldername", "homes", "This is the name of the folder for the home file locations when using SEPARATEFILES mode");
+        plugin.getMainConfig().addDefault("homes.singlefile.name", "homes.yml", "This is just the name of the file when using SINGLEFILE storage mode", "If you change this after homes are created, you will need to rename the old file to the new name. Otherwise homes will not be loaded");
+        plugin.getMainConfig().addDefault("homes.separatefiles.foldername", "homes", "This is the name of the folder for the home file locations when using SEPARATEFILES mode", "If you change this after homes are created, you will need to rename the old folder to the new name. Otherwise homes will not be loaded");
+        plugin.getMainConfig().save();
         loadHomes();
         
         Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, StarHomes::saveHomes, 1L, 6000L);
@@ -280,78 +282,123 @@ public final class StarHomes {
         return Optional.empty();
     }
     
-    public static Home setHome(Home home) {
-        UUID owner = home.getOwner();
+    public enum SetHomeStatus {
+        SUCCESS, EVENT_CANCELLED
+    }
+    
+    public record SetHomeInfo(Home home, SetHomeStatus status) {}
+    
+    public static SetHomeInfo setHome(UUID owner, String name, Location location) {
+        return setHome(owner, name, location, null);
+    }
+    
+    public static SetHomeInfo setHome(UUID owner, String name, Location location, Actor actor) {
         ObservableList<Home> homes = getHomes(owner);
+        
+        Home home = null;
+        boolean add = false;
+        
         if (homes.isEmpty()) {
-            homes.add(home);
-            return home;
+            home = new Home(owner, name, location);
+            add = true;
         }
         
-        for (Home h : homes) {
-            if (h.getName().equalsIgnoreCase(home.getName())) {
-                h.setPosition(home.getPosition());
-                h.setWorldName(home.getWorldName());
-                return h;
+        if (home == null) {
+            for (Home h : homes) {
+                if (h.getName().equalsIgnoreCase(name)) {
+                    h.setPosition(location);
+                    home = h;
+                    break;
+                }
             }
         }
         
-        homes.add(home);
-        return home;
-    }
-    
-    public static Home setHome(UUID owner, String name, Location location) {
-        ObservableList<Home> homes = getHomes(owner);
-        if (homes.isEmpty()) {
-            Home home = new Home(owner, name, location);
+        if (home == null) {
+            home = new Home(owner, name, location);
+            add = true;
+        }
+        
+        SetHomeEvent setHomeEvent = new SetHomeEvent(home, actor);
+        Bukkit.getPluginManager().callEvent(setHomeEvent);
+        
+        if (setHomeEvent.isCancelled()) {
+            return new SetHomeInfo(home, SetHomeStatus.EVENT_CANCELLED);
+        }
+        
+        if (add) {
             homes.add(home);
-            return home;
         }
         
-        for (Home home : homes) {
-            if (home.getName().equalsIgnoreCase(name)) {
-                home.setPosition(location);
-                return home;
-            }
-        }
-        
-        Home home = new Home(owner, name, location);
-        homes.add(home);
-        return home;
+        return new SetHomeInfo(home, SetHomeStatus.SUCCESS);
     }
     
-    public static Optional<Home> deleteHome(UUID owner, String name) {
+    public enum DeleteHomeStatus {
+        SUCCESS, EVENT_CANCELLED, NO_HOME
+    }
+    
+    public record DeleteHomeInfo(Optional<Home> home, String name, DeleteHomeStatus status) {}
+    
+    public static DeleteHomeInfo deleteHome(UUID owner, String name) {
+        return deleteHome(owner, name, null);
+    }
+    
+    public static DeleteHomeInfo deleteHome(UUID owner, String name, Actor actor) {
         ObservableList<Home> homes = getHomes(owner);
         if (homes.isEmpty()) {
-            return Optional.empty();
+            return new DeleteHomeInfo(Optional.empty(), name, DeleteHomeStatus.NO_HOME);
         }
         
         Iterator<Home> iterator = homes.iterator();
         while (iterator.hasNext()) {
             Home home = iterator.next();
             if (home.getName().equalsIgnoreCase(name)) {
+                DeleteHomeEvent deleteHomeEvent = new DeleteHomeEvent(home, actor);
+                Bukkit.getPluginManager().callEvent(deleteHomeEvent);
+                
+                if (deleteHomeEvent.isCancelled()) {
+                    return new DeleteHomeInfo(Optional.of(home), name, DeleteHomeStatus.EVENT_CANCELLED);
+                }
+                
                 iterator.remove();
-                return Optional.of(home);
+                return new DeleteHomeInfo(Optional.of(home), name, DeleteHomeStatus.SUCCESS);
             }
         }
         
-        return Optional.empty();
+        return new DeleteHomeInfo(Optional.empty(), name, DeleteHomeStatus.NO_HOME);
     }
     
-    public static Optional<Pair<Home, String>> renameHome(UUID owner, String oldName, String newName) {
+    public enum RenameHomeStatus {
+        SUCCESS, EVENT_CANCELLED, NO_HOME
+    }
+    
+    public record RenameHomeInfo(Optional<Home> home, String oldName, String newName, RenameHomeStatus status) {}
+    
+    public static RenameHomeInfo renameHome(UUID owner, String oldName, String newName, Actor actor) {
         ObservableList<Home> homes = getHomes(owner);
         if (homes.isEmpty()) {
-            return Optional.empty();
+            return new RenameHomeInfo(Optional.empty(), oldName, newName, RenameHomeStatus.NO_HOME);
         }
         
         for (Home home : homes) {
             if (home.getName().equalsIgnoreCase(oldName)) {
                 String existingName = home.getName();
+                
+                RenameHomeEvent renameHomeEvent = new RenameHomeEvent(home, newName, actor);
+                Bukkit.getPluginManager().callEvent(renameHomeEvent);
+                
+                if (renameHomeEvent.isCancelled()) {
+                    return new RenameHomeInfo(Optional.of(home), existingName, newName, RenameHomeStatus.EVENT_CANCELLED);
+                }
+                
                 home.setName(newName);
-                return Optional.of(new Pair<>(home, existingName));
+                return new RenameHomeInfo(Optional.of(home), existingName, newName, RenameHomeStatus.SUCCESS);
             }
         }
         
-        return Optional.empty();
+        return new RenameHomeInfo(Optional.empty(), oldName, newName, RenameHomeStatus.NO_HOME);
+    }
+    
+    public static RenameHomeInfo renameHome(UUID owner, String oldName, String newName) {
+        return renameHome(owner, oldName, newName, null);
     }
 }

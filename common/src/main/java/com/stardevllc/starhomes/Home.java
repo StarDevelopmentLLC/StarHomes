@@ -83,7 +83,7 @@ public class Home {
             return false;
         }
         
-        return Objects.equals(owner, home.owner) && Objects.equals(name, home.name);
+        return Objects.equals(owner, home.owner) && Objects.equals(name.toLowerCase(), home.name.toLowerCase());
     }
     
     @Override
