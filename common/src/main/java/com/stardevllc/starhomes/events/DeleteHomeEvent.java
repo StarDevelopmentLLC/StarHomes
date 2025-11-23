@@ -4,6 +4,7 @@ import com.stardevllc.starhomes.Home;
 import com.stardevllc.starmclib.actors.Actor;
 import org.bukkit.event.*;
 
+import java.util.Optional;
 public class DeleteHomeEvent extends Event implements Cancellable {
     
     private static HandlerList handlerList = new HandlerList();
@@ -24,6 +25,8 @@ public class DeleteHomeEvent extends Event implements Cancellable {
     
     public Actor getActor() {
         return actor;
+    public Optional<Actor> getActor() {
+        return Optional.ofNullable(actor);
     }
     
     public static HandlerList getHandlerList() {
