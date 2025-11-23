@@ -10,8 +10,8 @@ public class DeleteHomeEvent extends Event implements Cancellable {
     
     private boolean cancelled;
     
-    private Home home;
-    private Actor actor;
+    private final Home home;
+    private final Actor actor;
     
     public DeleteHomeEvent(Home home, Actor actor) {
         this.home = home;

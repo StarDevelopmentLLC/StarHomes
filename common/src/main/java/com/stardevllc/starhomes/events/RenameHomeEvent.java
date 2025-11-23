@@ -10,9 +10,9 @@ public class RenameHomeEvent extends Event implements Cancellable {
     
     private boolean cancelled;
     
-    private Home home;
-    private String newName;
-    private Actor actor;
+    private final Home home;
+    private final String newName;
+    private final Actor actor;
     
     public RenameHomeEvent(Home home, String newName, Actor actor) {
         this.home = home;
