@@ -70,10 +70,7 @@ tasks.named('shadowJar', ShadowJar) {
 
 dependencies {
     compileOnly "org.spigotmc:spigot-api:${spigotVersion}"
-    compileOnly "me.clip:placeholderapi:${papiVersion}"
-    compileOnly "de.tr7zw:item-nbt-api-plugin:${nbtapiVersion}"
     compileOnly "com.stardevllc:StarMCLib:${starmclibVersion}"
-    compileOnly "com.github.MilkBowl:VaultAPI:${vaultVersion}"
     implementation project(':common')
 }
 

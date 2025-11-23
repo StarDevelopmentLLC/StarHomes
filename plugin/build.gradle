@@ -31,10 +31,7 @@ tasks.named('shadowJar', ShadowJar) {
 dependencies {
     implementation project(":common")
     compileOnly "org.spigotmc:spigot-api:${spigotVersion}"
-    compileOnly "me.clip:placeholderapi:${papiVersion}"
-    compileOnly "de.tr7zw:item-nbt-api-plugin:${nbtapiVersion}"
     compileOnly "com.stardevllc:StarMCLib:${starmclibVersion}"
-    implementation "com.stardevllc:SMaterial:${smaterialVersion}"
 }
 
 java {
