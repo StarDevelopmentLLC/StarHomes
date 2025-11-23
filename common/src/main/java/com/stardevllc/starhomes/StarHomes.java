@@ -26,13 +26,21 @@ import java.util.logging.Level;
  * This also has pretty much all logic needed for homes for the most part.
  * The homes are stored in an {@link ObservableMap} with UUIDs for the keys and an {@link ObservableList} for the homes list
  * Using the observable map and list allow for the ability to listen for when things are changed and removed at will
+ * This also allows you to modify the homes as well, use with caution
  * </p>
  */
 public final class StarHomes {
+    private StarHomes() {}
+    
     private static ExtendedJavaPlugin plugin;
     
     private static final ObservableMap<UUID, ObservableList<Home>> homes = new ObservableHashMap<>();
     
+    /**
+     * Initalilzes StarHomes
+     *
+     * @param plugin The holder plugin
+     */
     public static void init(ExtendedJavaPlugin plugin) {
         if (StarHomes.plugin != null) {
             plugin.getLogger().warning("StarHomes has already been initialized by the plugin: " + StarHomes.plugin.getName());
@@ -50,7 +58,7 @@ public final class StarHomes {
         Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, StarHomes::saveHomes, 1L, 6000L);
     }
     
-    public static Optional<File> getSingleFile() {
+    private static Optional<File> getSingleFile() {
         if (!"singlefile".equalsIgnoreCase(plugin.getMainConfig().getString("homes.storage"))) {
             return Optional.empty();
         }
@@ -67,7 +75,7 @@ public final class StarHomes {
         return Optional.of(file);
     }
     
-    public static Optional<FileConfig> getSingleConfig() {
+    private static Optional<FileConfig> getSingleConfig() {
         Optional<File> singleFileOpt = getSingleFile();
         if (singleFileOpt.isEmpty()) {
             return Optional.empty();
@@ -83,7 +91,7 @@ public final class StarHomes {
         return Optional.of(config);
     }
     
-    public static Optional<File> getHomesFolder() {
+    private static Optional<File> getHomesFolder() {
         if (!"separatefiles".equalsIgnoreCase(plugin.getMainConfig().getString("homes.storage"))) {
             return Optional.empty();
         }
@@ -96,6 +104,11 @@ public final class StarHomes {
         return Optional.of(folder);
     }
     
+    /**
+     * Loads all homes from storage
+     *
+     * @throws IllegalArgumentException If the storage mode from the config if it is invalid
+     */
     public static void loadHomes() {
         String storageMode = plugin.getMainConfig().getString("homes.storage");
         if (storageMode.equalsIgnoreCase("singlefile")) {
@@ -160,6 +173,13 @@ public final class StarHomes {
         }
     }
     
+    /**
+     * Loads all homes for a home owner
+     *
+     * @param owner   The owner to load from (Needed for home instantiation)
+     * @param section The config section that contains the homes
+     * @return The ObservableList of all loaded homes
+     */
     public static ObservableList<Home> loadHomes(UUID owner, Section section) {
         ObservableList<Home> homes = new ObservableArrayList<>();
         for (String name : section.getKeys()) {
@@ -176,6 +196,11 @@ public final class StarHomes {
         return homes;
     }
     
+    /**
+     * Saves all homes to storage
+     *
+     * @throws IllegalArgumentException If the storage mode from the config is invalid
+     */
     public static void saveHomes() {
         try {
             String storageMode = plugin.getMainConfig().getString("homes.storage");
@@ -237,9 +262,17 @@ public final class StarHomes {
             } else {
                 throw new IllegalArgumentException("Invalid storage mode provided");
             }
-        } catch (ConcurrentModificationException e) {}
+        } catch (ConcurrentModificationException e) {
+        }
     }
     
+    /**
+     * Saves all homes for an owner
+     *
+     * @param owner   The owner of the homes
+     * @param homes   The list of homes to save
+     * @param section The section to save the homes in
+     */
     public static void saveHomes(UUID owner, ObservableList<Home> homes, Section section) {
         for (Home home : homes) {
             String name = home.getName();
@@ -253,10 +286,21 @@ public final class StarHomes {
         }
     }
     
+    /**
+     * Gets a mapping of all homes to their owners
+     *
+     * @return The ObservableMap of homes and uuids
+     */
     public static ObservableMap<UUID, ObservableList<Home>> getHomes() {
         return homes;
     }
     
+    /**
+     * Gets all homes for a home owner
+     *
+     * @param owner The owner
+     * @return The list of homes for that owner
+     */
     public static ObservableList<Home> getHomes(UUID owner) {
         if (homes.containsKey(owner)) {
             return homes.get(owner);
@@ -267,6 +311,13 @@ public final class StarHomes {
         return playerHomes;
     }
     
+    /**
+     * Gets a home based on an owner and a name
+     *
+     * @param owner The owner
+     * @param name  The name (case-insensitive)
+     * @return An optional that is null if a home does not exist, or the home if found
+     */
     public static Optional<Home> getHome(UUID owner, String name) {
         ObservableList<Home> homes = getHomes(owner);
         if (homes.isEmpty()) {
@@ -282,16 +333,51 @@ public final class StarHomes {
         return Optional.empty();
     }
     
+    /**
+     * Status enum for the Set Home actions
+     */
     public enum SetHomeStatus {
-        SUCCESS, EVENT_CANCELLED
+        /**
+         * The setting of the home was successful
+         */
+        SUCCESS,
+        
+        /**
+         * The {@link SetHomeEvent} was cancelled
+         */
+        EVENT_CANCELLED
     }
     
-    public record SetHomeInfo(Home home, SetHomeStatus status) {}
+    /**
+     * Record for the return info when using set home
+     *
+     * @param home   The home that is returned. This is never null
+     * @param status The status of the action
+     */
+    public record SetHomeInfo(Home home, SetHomeStatus status) {
+    }
     
+    /**
+     * Sets a home with provided information.
+     *
+     * @param owner    The owner of the home
+     * @param name     The name for the home
+     * @param location The location where the home is set
+     * @return The information regarding the action
+     */
     public static SetHomeInfo setHome(UUID owner, String name, Location location) {
         return setHome(owner, name, location, null);
     }
     
+    /**
+     * Sets a home with provided information
+     *
+     * @param owner    The owner of the home
+     * @param name     The name for the home
+     * @param location The location where the home is set
+     * @param actor    The actor that performed the action (Can be null)
+     * @return The information regarding the action
+     */
     public static SetHomeInfo setHome(UUID owner, String name, Location location, Actor actor) {
         ObservableList<Home> homes = getHomes(owner);
         
@@ -306,7 +392,7 @@ public final class StarHomes {
         if (home == null) {
             for (Home h : homes) {
                 if (h.getName().equalsIgnoreCase(name)) {
-                    h.setPosition(location);
+                    h.setLocation(location);
                     home = h;
                     break;
                 }
@@ -332,16 +418,55 @@ public final class StarHomes {
         return new SetHomeInfo(home, SetHomeStatus.SUCCESS);
     }
     
+    /**
+     * Status enum for delete home actions
+     */
     public enum DeleteHomeStatus {
-        SUCCESS, EVENT_CANCELLED, NO_HOME
+        /**
+         * The deletion of the home was successful
+         */
+        SUCCESS,
+        
+        /**
+         * The {@link DeleteHomeEvent} was cancelled
+         */
+        EVENT_CANCELLED,
+        
+        /**
+         * No home was found with the name provided
+         */
+        NO_HOME
     }
     
-    public record DeleteHomeInfo(Optional<Home> home, String name, DeleteHomeStatus status) {}
+    /**
+     * Record for the delete home action information
+     *
+     * @param home   The home optional. This only exists if the Status is SUCCESS
+     * @param name   The name of the home to be deleted or was deleted
+     * @param status The status of the action
+     */
+    public record DeleteHomeInfo(Optional<Home> home, String name, DeleteHomeStatus status) {
+    }
     
+    /**
+     * Deletes a home based on provided values
+     *
+     * @param owner The owner of the home
+     * @param name  The name of the home (case-insensitive)
+     * @return The action information
+     */
     public static DeleteHomeInfo deleteHome(UUID owner, String name) {
         return deleteHome(owner, name, null);
     }
     
+    /**
+     * Deletes a home based on provided values
+     *
+     * @param owner The owner of the home
+     * @param name  The name of the home (case-insensitive)
+     * @param actor The Actor that performed the action (can be null)
+     * @return The action information
+     */
     public static DeleteHomeInfo deleteHome(UUID owner, String name, Actor actor) {
         ObservableList<Home> homes = getHomes(owner);
         if (homes.isEmpty()) {
@@ -367,12 +492,46 @@ public final class StarHomes {
         return new DeleteHomeInfo(Optional.empty(), name, DeleteHomeStatus.NO_HOME);
     }
     
+    /**
+     * Status enum for rename actions
+     */
     public enum RenameHomeStatus {
-        SUCCESS, EVENT_CANCELLED, NO_HOME
+        /**
+         * The rename was successful
+         */
+        SUCCESS,
+        
+        /**
+         * The {@link RenameHomeEvent} was cancelled
+         */
+        EVENT_CANCELLED,
+        
+        /**
+         * No home was found with the provided name
+         */
+        NO_HOME
     }
     
-    public record RenameHomeInfo(Optional<Home> home, String oldName, String newName, RenameHomeStatus status) {}
+    /**
+     * Record for the information relatled to renaming a home
+     *
+     * @param home    The home that was renamed (This is present if the event cancelled and success status are the ones)
+     * @param oldName The old name (This may not be the direct name provided, it is replaced with the actual name if a home is found)
+     * @param newName The new name
+     * @param status  The status of the action
+     */
+    public record RenameHomeInfo(Optional<Home> home, String oldName, String newName, RenameHomeStatus status) {
+    }
     
+    /**
+     * Renames a home with provided information
+     *
+     * @param owner   The owner of the home
+     * @param oldName The old name of the home (This might get changed in the info if a home was found and differs in case)
+     * @param newName The new name for the home
+     * @param actor   The actor the performed the action
+     * @return The information related to the action
+     */
     public static RenameHomeInfo renameHome(UUID owner, String oldName, String newName, Actor actor) {
         ObservableList<Home> homes = getHomes(owner);
         if (homes.isEmpty()) {
@@ -398,6 +557,15 @@ public final class StarHomes {
         return new RenameHomeInfo(Optional.empty(), oldName, newName, RenameHomeStatus.NO_HOME);
     }
     
+    /**
+     * Renames a home with provided information
+     *
+     * @param owner   The owner of the home
+     * @param oldName The old name of the home (This might get changed in the info if a home was found and differs in case)
+     * @param newName The new name for the home
+     * @return Th
+     * e information related to the action
+     */
     public static RenameHomeInfo renameHome(UUID owner, String oldName, String newName) {
         return renameHome(owner, oldName, newName, null);
     }
