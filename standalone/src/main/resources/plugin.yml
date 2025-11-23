@@ -1,0 +1,11 @@
+main: com.stardevllc.starhomes.plugin.StandaloneStarHomesPlugin
+version: ${version}
+api-version: 1.13
+name: ${rootProject.name}
+author: Firestar311
+softdepend: [PlaceholderAPI]
+commands:
+  delhome:
+  home:
+  renamehome:
+  sethome:

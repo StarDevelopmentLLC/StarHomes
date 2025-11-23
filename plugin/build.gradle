@@ -1,0 +1,50 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+plugins {
+    id 'java-library'
+    id 'com.gradleup.shadow' version '9.2.2'
+}
+
+version = rootProject.version
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url = 'https://repo.stardevllc.com/releases'}
+    maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'}
+    maven { url = 'https://repo.extendedclip.com/content/repositories/placeholderapi/'}
+    maven { url = 'https://repo.codemc.org/repository/maven-public/'}
+}
+
+processResources {
+    filesMatching("*.yml") {
+        expand(project.properties)
+    }
+}
+
+tasks.named('shadowJar', ShadowJar) {
+    archiveClassifier = 'plugin'
+    archiveBaseName = 'StarHomes'
+    destinationDirectory = rootProject.layout.buildDirectory.dir("libs")
+}
+
+dependencies {
+    implementation project(":common")
+    compileOnly "org.spigotmc:spigot-api:${spigotVersion}"
+    compileOnly "me.clip:placeholderapi:${papiVersion}"
+    compileOnly "de.tr7zw:item-nbt-api-plugin:${nbtapiVersion}"
+    compileOnly "com.stardevllc:StarMCLib:${starmclibVersion}"
+    implementation "com.stardevllc:SMaterial:${smaterialVersion}"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+
+    withJavadocJar()
+    withSourcesJar()
+}
+
+tasks.compileJava.dependsOn(clean)
+tasks.jar.finalizedBy(shadowJar)
