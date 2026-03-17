@@ -2,7 +2,7 @@ package com.stardevllc.starhomes.commands;
 
 import com.stardevllc.starhomes.Home;
 import com.stardevllc.starhomes.StarHomes;
-import com.stardevllc.starlib.observable.collections.list.ObservableList;
+import com.stardevllc.starlib.collections.observable.list.ObservableList;
 import com.stardevllc.starmclib.command.flags.FlagResult;
 import com.stardevllc.starmclib.mojang.MojangProfile;
 import com.stardevllc.starmclib.plugin.ExtendedJavaPlugin;
