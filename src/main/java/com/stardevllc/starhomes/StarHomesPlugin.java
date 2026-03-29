@@ -1,8 +1,7 @@
-package com.stardevllc.starhomes.plugin;
+package com.stardevllc.starhomes;
 
-import com.stardevllc.starhomes.StarHomes;
+import com.stardevllc.plugin.ExtendedJavaPlugin;
 import com.stardevllc.starhomes.commands.*;
-import com.stardevllc.starmclib.plugin.ExtendedJavaPlugin;
 
 public class StarHomesPlugin extends ExtendedJavaPlugin {
     @Override

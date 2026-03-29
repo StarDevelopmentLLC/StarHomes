@@ -70,8 +70,7 @@ tasks.named('shadowJar', ShadowJar) {
 
 dependencies {
     compileOnly "org.spigotmc:spigot-api:${spigotVersion}"
-    compileOnly "com.stardevllc:StarMCLib:${starmclibVersion}"
-    implementation project(':common')
+    compileOnly "com.stardevllc:StarCore:${starcoreVersion}"
 }
 
 java {

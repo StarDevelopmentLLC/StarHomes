@@ -1,7 +1,7 @@
 package com.stardevllc.starhomes.events;
 
+import com.stardevllc.actors.Actor;
 import com.stardevllc.starhomes.Home;
-import com.stardevllc.starmclib.actors.Actor;
 import org.bukkit.Location;
 import org.bukkit.event.*;
 

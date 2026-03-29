@@ -1,6 +1,6 @@
 package com.stardevllc.starhomes;
 
-import com.stardevllc.starmclib.Position;
+import com.stardevllc.Position;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;

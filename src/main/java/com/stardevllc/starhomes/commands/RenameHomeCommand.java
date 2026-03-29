@@ -1,14 +1,13 @@
 package com.stardevllc.starhomes.commands;
 
+import com.stardevllc.actors.Actors;
+import com.stardevllc.command.flags.FlagResult;
+import com.stardevllc.mojang.MojangProfile;
+import com.stardevllc.plugin.ExtendedJavaPlugin;
 import com.stardevllc.starhomes.Home;
 import com.stardevllc.starhomes.StarHomes;
 import com.stardevllc.starhomes.StarHomes.RenameHomeInfo;
 import com.stardevllc.starhomes.StarHomes.RenameHomeStatus;
-import com.stardevllc.starhomes.events.RenameHomeEvent;
-import com.stardevllc.starmclib.actors.Actors;
-import com.stardevllc.starmclib.command.flags.FlagResult;
-import com.stardevllc.starmclib.mojang.MojangProfile;
-import com.stardevllc.starmclib.plugin.ExtendedJavaPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
