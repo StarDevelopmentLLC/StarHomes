@@ -1,11 +1,11 @@
 package com.stardevllc.starhomes;
 
-import com.stardevllc.Position;
-import com.stardevllc.actors.Actor;
+import com.stardevllc.minecraft.Position;
+import com.stardevllc.minecraft.actors.Actor;
 import com.stardevllc.config.Section;
 import com.stardevllc.config.file.FileConfig;
 import com.stardevllc.config.file.yaml.YamlConfig;
-import com.stardevllc.plugin.ExtendedJavaPlugin;
+import com.stardevllc.minecraft.plugin.ExtendedJavaPlugin;
 import com.stardevllc.starhomes.events.*;
 import com.stardevllc.starlib.collections.observable.list.ObservableArrayList;
 import com.stardevllc.starlib.collections.observable.list.ObservableList;

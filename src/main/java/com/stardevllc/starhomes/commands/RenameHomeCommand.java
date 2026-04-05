@@ -1,9 +1,9 @@
 package com.stardevllc.starhomes.commands;
 
-import com.stardevllc.actors.Actors;
-import com.stardevllc.command.flags.FlagResult;
-import com.stardevllc.mojang.MojangProfile;
-import com.stardevllc.plugin.ExtendedJavaPlugin;
+import com.stardevllc.minecraft.actors.Actors;
+import com.stardevllc.minecraft.command.flags.FlagResult;
+import com.stardevllc.minecraft.mojang.MojangProfile;
+import com.stardevllc.minecraft.plugin.ExtendedJavaPlugin;
 import com.stardevllc.starhomes.Home;
 import com.stardevllc.starhomes.StarHomes;
 import com.stardevllc.starhomes.StarHomes.RenameHomeInfo;

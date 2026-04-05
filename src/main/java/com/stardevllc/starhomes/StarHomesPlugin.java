@@ -1,6 +1,6 @@
 package com.stardevllc.starhomes;
 
-import com.stardevllc.plugin.ExtendedJavaPlugin;
+import com.stardevllc.minecraft.plugin.ExtendedJavaPlugin;
 import com.stardevllc.starhomes.commands.*;
 
 public class StarHomesPlugin extends ExtendedJavaPlugin {

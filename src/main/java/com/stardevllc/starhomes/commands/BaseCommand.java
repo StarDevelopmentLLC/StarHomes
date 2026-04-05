@@ -1,9 +1,9 @@
 package com.stardevllc.starhomes.commands;
 
-import com.stardevllc.command.StarCommand;
-import com.stardevllc.mojang.MojangAPI;
-import com.stardevllc.mojang.MojangProfile;
-import com.stardevllc.plugin.ExtendedJavaPlugin;
+import com.stardevllc.minecraft.command.StarCommand;
+import com.stardevllc.minecraft.mojang.MojangAPI;
+import com.stardevllc.minecraft.mojang.MojangProfile;
+import com.stardevllc.minecraft.plugin.ExtendedJavaPlugin;
 import org.bukkit.entity.Player;
 
 public abstract class BaseCommand extends StarCommand<ExtendedJavaPlugin> {

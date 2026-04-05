@@ -1,7 +1,7 @@
 package com.stardevllc.starhomes.events;
 
 import com.stardevllc.starhomes.Home;
-import com.stardevllc.actors.Actor;
+import com.stardevllc.minecraft.actors.Actor;
 import org.bukkit.event.*;
 
 import java.util.Optional;
